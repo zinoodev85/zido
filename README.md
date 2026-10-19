@@ -1,6 +1,9 @@
 # zido
 
-A `/todo` skill for [Claude Code](https://claude.com/claude-code): tell Claude what needs doing, paste a screenshot, a link or a mail, and it files a todo in a plain git repo of Markdown folders.
+Two skills for [Claude Code](https://claude.com/claude-code):
+
+- **`/todo`**: tell Claude what needs doing, paste a screenshot, a link or a mail, and it files a todo in a plain git repo of Markdown folders.
+- **`/kickoff`**: point it at an issue, MR or todo and it researches everything (description, every comment, related MRs, attached images, the code) and writes the first prompt for the session that will do the work: goal, a done check that can pass or fail, proof, facts with sources, open questions.
 
 ```
 /todo fix the checkout bug https://gitlab.com/acme/shop/-/issues/179
@@ -14,11 +17,11 @@ A `/todo` skill for [Claude Code](https://claude.com/claude-code): tell Claude w
 
 ```sh
 brew install zinoodev85/tap/zido
-zido install      # links the skill to ~/.claude/skills/todo
+zido install      # links the skills to ~/.claude/skills/{todo,kickoff}
 zido init         # creates the todo repo at ~/todos
 ```
 
-`brew upgrade zido` updates the skill in place. Without Homebrew: clone this repo and run `bin/zido install`.
+`brew upgrade zido` updates the skills in place. `zido install kickoff` links just one. Without Homebrew: clone this repo and run `bin/zido install`.
 
 ## How todos are stored
 
@@ -40,7 +43,15 @@ Every change is committed (and pushed, if the repo has a remote).
 - **Links**: titles are fetched; GitLab issues/MRs (`glab`) and GitHub issues/PRs (`gh`) work on any host you are logged in to, private repos included.
 - **Mails and long texts** are saved verbatim as attachments; the todo gets a short summary.
 - **Closed-issue check**: `/todo what's up next` lists todos whose linked issues/MRs/PRs are all closed or merged and offers to mark them done.
-- **`/todo now …`**: add a todo and start a Claude session on it right away (needs `zidev`, see below).
+- **`/todo now …`**: add a todo, let `/kickoff` write the prompt, and start a Claude session on it right away (needs `zidev`, see below).
+
+## /kickoff
+
+```
+/kickoff https://gitlab.com/acme/shop/-/issues/179
+```
+
+Read-only: it gathers, then prints the prompt (or writes `kickoff.md` into a todo folder). Rules it keeps: the goal says what, never how; every done check can visibly fail; facts carry their source; no guesses at the cause, because the session searches wherever a theory points; an existing MR for the task is named so the session continues it. With the [pstack](https://github.com/cursor/plugins/tree/main/pstack) plugin installed, code prompts start with `/pstack:poteto-mode`.
 
 ## Settings
 

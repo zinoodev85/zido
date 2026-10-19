@@ -1,63 +1,79 @@
 #!/usr/bin/env bash
-# zido — install the /todo skill for Claude Code and set up the todo repo.
+# zido — install the /todo and /kickoff skills for Claude Code and set up the todo repo.
 set -euo pipefail
 
-VERSION="0.1.2"
-# Homebrew replaces @SKILL_DIR@ with the stable opt path, so `brew upgrade` updates the skill in place.
-SKILL_DIR="@SKILL_DIR@"
-[[ "$SKILL_DIR" == @*@ ]] && SKILL_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../skill" && pwd)"
-TARGET="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/todo"
+VERSION="0.2.0"
+# Homebrew replaces @SKILLS_DIR@ with the stable opt path, so `brew upgrade` updates the skills in place.
+SKILLS_DIR="@SKILLS_DIR@"
+[[ "$SKILLS_DIR" == @*@ ]] && SKILLS_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../skills" && pwd)"
+CLAUDE_SKILLS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
+ALL_SKILLS=(todo kickoff)
 HOME_DIR="${TODO_HOME:-$HOME/todos}"
 
 usage() {
   cat <<EOF
-zido $VERSION — a /todo skill for Claude Code
+zido $VERSION — /todo and /kickoff skills for Claude Code
 
 Usage:
-  zido install [--force]   link the skill to $TARGET
-  zido uninstall           remove that link
-  zido init                create the todo repo at \$TODO_HOME ($HOME_DIR)
-  zido path                print the skill directory
+  zido install [--force] [skill…]   link skills to $CLAUDE_SKILLS/<skill> (default: ${ALL_SKILLS[*]})
+  zido uninstall [skill…]           remove those links
+  zido init                         create the todo repo at \$TODO_HOME ($HOME_DIR)
+  zido path                         print the skills directory
   zido version
 
 Env: TODO_HOME (default ~/todos), TODO_LANG (en | de) for TODO.md labels.
 EOF
 }
 
-case "${1:-help}" in
-  install)
-    mkdir -p "$(dirname "$TARGET")"
-    if [[ -L "$TARGET" ]]; then
-      ln -sfn "$SKILL_DIR" "$TARGET"
-    elif [[ -e "$TARGET" ]]; then
-      if [[ "${2:-}" != "--force" ]]; then
-        echo "$TARGET exists and is not a link. Move it away or run: zido install --force" >&2
-        exit 1
-      fi
-      backup="$TARGET.bak.$(date +%Y%m%d%H%M%S)"
-      mv "$TARGET" "$backup"
-      echo "Moved old skill to $backup"
-      ln -s "$SKILL_DIR" "$TARGET"
-    else
-      ln -s "$SKILL_DIR" "$TARGET"
+link_skill() {  # link_skill <name> <force>
+  local src="$SKILLS_DIR/$1" target="$CLAUDE_SKILLS/$1"
+  [[ -d "$src" ]] || { echo "unknown skill: $1 (have: ${ALL_SKILLS[*]})" >&2; return 1; }
+  if [[ -e "$target" && ! -L "$target" ]]; then
+    if [[ "$2" != "--force" ]]; then
+      echo "$target exists and is not a link. Move it away or run: zido install --force $1" >&2
+      return 1
     fi
-    echo "Linked $TARGET -> $SKILL_DIR"
+    local backup
+    backup="$target.bak.$(date +%Y%m%d%H%M%S)"
+    mv "$target" "$backup"
+    echo "Moved old skill to $backup"
+  fi
+  ln -sfn "$src" "$target"
+  echo "Linked $target -> $src"
+}
+
+cmd="${1:-help}"
+[[ $# -gt 0 ]] && shift
+force=""
+[[ "${1:-}" == "--force" ]] && { force="--force"; shift; }
+skills=("$@")
+[[ ${#skills[@]} -eq 0 ]] && skills=("${ALL_SKILLS[@]}")
+
+case "$cmd" in
+  install)
+    mkdir -p "$CLAUDE_SKILLS"
+    status=0
+    for s in "${skills[@]}"; do link_skill "$s" "$force" || status=1; done
     [[ -d "$HOME_DIR/.git" ]] || echo "Next: zido init   (creates $HOME_DIR)"
+    exit $status
     ;;
   uninstall)
-    if [[ -L "$TARGET" ]]; then rm "$TARGET" && echo "Removed $TARGET"; else echo "$TARGET is not a link, left alone" >&2; fi
+    for s in "${skills[@]}"; do
+      t="$CLAUDE_SKILLS/$s"
+      if [[ -L "$t" ]]; then rm "$t" && echo "Removed $t"; else echo "$t is not a link, left alone" >&2; fi
+    done
     ;;
   init)
     mkdir -p "$HOME_DIR/todos/open" "$HOME_DIR/todos/done"
     touch "$HOME_DIR/todos/open/.gitkeep" "$HOME_DIR/todos/done/.gitkeep"
     cd "$HOME_DIR"
     [[ -d .git ]] || git init -q
-    python3 "$SKILL_DIR/scripts/index.py"
+    python3 "$SKILLS_DIR/todo/scripts/index.py"
     git add -A
     git diff --cached --quiet || git commit -qm "todo: init"
     echo "Todo repo ready at $HOME_DIR (add a git remote to sync it)"
     ;;
-  path) echo "$SKILL_DIR" ;;
+  path) echo "$SKILLS_DIR" ;;
   version|--version|-v) echo "$VERSION" ;;
   help|--help|-h) usage ;;
   *) usage >&2; exit 1 ;;
