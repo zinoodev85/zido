@@ -80,8 +80,16 @@ Only if [`zidev`](https://github.com/zinoodev85/zido#zidev) is on `PATH` (`comma
 "Start a session for the todo": the new session must know the todo from its first message.
 
 1. Find the repo, fresh clone next to existing checkouts (`git clone --reference <old checkout> --dissociate`), new branch off the default branch. Never reuse a checkout that is on another branch. A linked worktree can't be a `--reference` (git refuses): then clone plainly. Run `zidev new` only after the clone succeeded (`&&`), else the session starts in a missing folder and burns its prompt.
-2. `zidev new <dir> --prompt "<prompt>"` — the prompt is the session's first message. In the todo's language:
-   `Work on the todo <abs path todo.md>. Read it first, with all images and attachments in its folder. Task: <1–2 sentences>. Checkout: <dir>, branch: <branch>. <known pointers: key files, MR, open questions>. Don't start building right away: analyse the case, make a plan, explain it to me short and simple (a few sentences, open questions first) and wait for my go. You own this todo (slug: <folder name>). Note progress under ## Notes in the todo; when the task is done (MR merged or similar), ask me and then close the todo with the todo skill (Done).`
+2. `zidev new <dir> --prompt "<prompt>"` — the prompt is the session's first message, in the todo's language. A good prompt carries a goal, a finish check that can pass or fail, the proof to show, and the known facts:
+   `<pstack> Work on the todo <abs path todo.md> (slug: <folder name>); read it first, with all images and attachments in its folder. Goal: <what is wrong or wanted, 1–2 sentences>. Done when: <check that can pass or fail>. Proof: <evidence to show>. Known: <facts only>. Checkout: <dir>, branch: <branch>. Don't change any code yet<, repro first>: restate the problem in your own words, make a short plan, explain it to me simply (open questions first) and wait for my go. Note progress under ## Notes in the todo; when the task is done (MR merged or similar), ask me and then close the todo with the todo skill (Done).`
+   - `<pstack>`: `/pstack:poteto-mode` when the [pstack](https://github.com/cursor/plugins/tree/main/pstack) plugin is installed (`claude plugin list | grep -q pstack`) and it is code work; it picks its own playbook (bug fix, feature, investigation …). Otherwise leave it out.
+   - **Goal:** the outcome, not the how. No implementation steps.
+   - **Done when:** concrete and pass/fail, from the issue's acceptance criteria or the report (e.g. "the field shows again after DE → AT → DE", "spec for X green and MR open"). Never "make it better". Unclear → `Done when: propose a checkable finish`, and it becomes the first open question.
+   - **Proof:** test output before/after, a screenshot of the flow, a stored value, a number before/after.
+   - **Known:** repro steps, error text, links, MR, related files, who reported it. Facts only, never a guess at the cause: the agent searches wherever a theory points.
+   - **repro first:** add it for bugs.
+   - Never list skills or playbooks in the prompt.
+   - Not code work (read, watch, decide, write a mail) → drop Done when/Proof if they make no sense.
    The slug is the folder name (`<date>-<slug>`), unique by construction.
 3. `zidev rename-project <dir> "<short name>"`.
 4. Assign: set `zidev: <dir>` in the frontmatter (TODO.md shows it as "▶ in progress"), append a dated line under `## Notes` (dir, branch, MR), `save.sh "todo: update <slug>"`.
@@ -91,7 +99,7 @@ Only if [`zidev`](https://github.com/zinoodev85/zido#zidev) is on `PATH` (`comma
 `/todo now <request>` (also "do it now", "start right away"): the whole process, no stop in between.
 
 1. **Add** as above (images, links, attachments), `save.sh "todo: add <slug>"`.
-2. **Start** as above: repo, fresh clone + branch, `zidev new … --prompt`, rename project, assign (`zidev:` + note), `save.sh "todo: update <slug>"`. The prompt asks for analysis + a short plan and a wait for the user's go; never "implement" in it.
+2. **Start** as above: repo, fresh clone + branch, `zidev new … --prompt`, rename project, assign (`zidev:` + note), `save.sh "todo: update <slug>"`. The prompt is the one from Start: goal, finish check, proof, facts, a wait for the user's go; never "implement" in it.
 3. Ask only when the repo is truly unclear (one question, with candidates found on GitLab/GitHub). No repo at all (not code work) → `zidev new` in the todo folder itself.
 4. Reply: link to the todo, the zidev project name, dir + branch.
 

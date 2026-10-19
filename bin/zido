@@ -2,7 +2,7 @@
 # zido — install the /todo skill for Claude Code and set up the todo repo.
 set -euo pipefail
 
-VERSION="0.1.1"
+VERSION="0.1.2"
 # Homebrew replaces @SKILL_DIR@ with the stable opt path, so `brew upgrade` updates the skill in place.
 SKILL_DIR="@SKILL_DIR@"
 [[ "$SKILL_DIR" == @*@ ]] && SKILL_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../skill" && pwd)"
