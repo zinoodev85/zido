@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# claude-todo — install the /todo skill for Claude Code and set up the todo repo.
+# zido — install the /todo skill for Claude Code and set up the todo repo.
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 # Homebrew replaces @SKILL_DIR@ with the stable opt path, so `brew upgrade` updates the skill in place.
 SKILL_DIR="@SKILL_DIR@"
 [[ "$SKILL_DIR" == @*@ ]] && SKILL_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../skill" && pwd)"
@@ -11,14 +11,14 @@ HOME_DIR="${TODO_HOME:-$HOME/todos}"
 
 usage() {
   cat <<EOF
-claude-todo $VERSION — a /todo skill for Claude Code
+zido $VERSION — a /todo skill for Claude Code
 
 Usage:
-  claude-todo install [--force]   link the skill to $TARGET
-  claude-todo uninstall           remove that link
-  claude-todo init                create the todo repo at \$TODO_HOME ($HOME_DIR)
-  claude-todo path                print the skill directory
-  claude-todo version
+  zido install [--force]   link the skill to $TARGET
+  zido uninstall           remove that link
+  zido init                create the todo repo at \$TODO_HOME ($HOME_DIR)
+  zido path                print the skill directory
+  zido version
 
 Env: TODO_HOME (default ~/todos), TODO_LANG (en | de) for TODO.md labels.
 EOF
@@ -31,7 +31,7 @@ case "${1:-help}" in
       ln -sfn "$SKILL_DIR" "$TARGET"
     elif [[ -e "$TARGET" ]]; then
       if [[ "${2:-}" != "--force" ]]; then
-        echo "$TARGET exists and is not a link. Move it away or run: claude-todo install --force" >&2
+        echo "$TARGET exists and is not a link. Move it away or run: zido install --force" >&2
         exit 1
       fi
       backup="$TARGET.bak.$(date +%Y%m%d%H%M%S)"
@@ -42,7 +42,7 @@ case "${1:-help}" in
       ln -s "$SKILL_DIR" "$TARGET"
     fi
     echo "Linked $TARGET -> $SKILL_DIR"
-    [[ -d "$HOME_DIR/.git" ]] || echo "Next: claude-todo init   (creates $HOME_DIR)"
+    [[ -d "$HOME_DIR/.git" ]] || echo "Next: zido init   (creates $HOME_DIR)"
     ;;
   uninstall)
     if [[ -L "$TARGET" ]]; then rm "$TARGET" && echo "Removed $TARGET"; else echo "$TARGET is not a link, left alone" >&2; fi

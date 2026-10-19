@@ -1,4 +1,4 @@
-# claude-todo
+# zido
 
 A `/todo` skill for [Claude Code](https://claude.com/claude-code): tell Claude what needs doing, paste a screenshot, a link or a mail, and it files a todo in a plain git repo of Markdown folders.
 
@@ -13,12 +13,12 @@ A `/todo` skill for [Claude Code](https://claude.com/claude-code): tell Claude w
 ## Install
 
 ```sh
-brew install zinoodev85/tap/claude-todo
-claude-todo install      # links the skill to ~/.claude/skills/todo
-claude-todo init         # creates the todo repo at ~/todos
+brew install zinoodev85/tap/zido
+zido install      # links the skill to ~/.claude/skills/todo
+zido init         # creates the todo repo at ~/todos
 ```
 
-`brew upgrade claude-todo` updates the skill in place. Without Homebrew: clone this repo and run `bin/claude-todo install`.
+`brew upgrade zido` updates the skill in place. Without Homebrew: clone this repo and run `bin/zido install`.
 
 ## How todos are stored
 

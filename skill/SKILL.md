@@ -7,7 +7,7 @@ description: Add, list, update or complete the user's todo items (stored in $TOD
 
 Data lives in `$TODO_HOME` (default `~/todos`), a git repo. All `todos/…` and `TODO.md` paths below are relative to it — use absolute paths, whatever the current directory is. `<scripts>` = the `scripts/` folder next to this file (`~/.claude/skills/todo/scripts/`). File links in replies: absolute `file://` paths.
 
-Write todos in the language the user writes in. If `$TODO_HOME` has no git repo yet, run `claude-todo init` (or `git init` there) first.
+Write todos in the language the user writes in. If `$TODO_HOME` has no git repo yet, run `zido init` (or `git init` there) first.
 
 ## Layout
 
@@ -75,7 +75,7 @@ Several todos in one message → one folder each. Section names (`Links`, `Attac
 
 ## Start work on a todo (zidev)
 
-Only if [`zidev`](https://github.com/zinoodev85/claude-todo#zidev) is on `PATH` (`command -v zidev`); otherwise tell the user how to start a Claude session on the todo by hand (the prompt from step 2) and stop.
+Only if [`zidev`](https://github.com/zinoodev85/zido#zidev) is on `PATH` (`command -v zidev`); otherwise tell the user how to start a Claude session on the todo by hand (the prompt from step 2) and stop.
 
 "Start a session for the todo": the new session must know the todo from its first message.
 
