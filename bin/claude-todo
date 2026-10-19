@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# claude-todo — install the /todo skill for Claude Code and set up the todo repo.
+set -euo pipefail
+
+VERSION="0.1.0"
+# Homebrew replaces @SKILL_DIR@ with the stable opt path, so `brew upgrade` updates the skill in place.
+SKILL_DIR="@SKILL_DIR@"
+[[ "$SKILL_DIR" == @*@ ]] && SKILL_DIR="$(cd "$(dirname "$(readlink -f "$0")")/../skill" && pwd)"
+TARGET="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/todo"
+HOME_DIR="${TODO_HOME:-$HOME/todos}"
+
+usage() {
+  cat <<EOF
+claude-todo $VERSION — a /todo skill for Claude Code
+
+Usage:
+  claude-todo install [--force]   link the skill to $TARGET
+  claude-todo uninstall           remove that link
+  claude-todo init                create the todo repo at \$TODO_HOME ($HOME_DIR)
+  claude-todo path                print the skill directory
+  claude-todo version
+
+Env: TODO_HOME (default ~/todos), TODO_LANG (en | de) for TODO.md labels.
+EOF
+}
+
+case "${1:-help}" in
+  install)
+    mkdir -p "$(dirname "$TARGET")"
+    if [[ -L "$TARGET" ]]; then
+      ln -sfn "$SKILL_DIR" "$TARGET"
+    elif [[ -e "$TARGET" ]]; then
+      if [[ "${2:-}" != "--force" ]]; then
+        echo "$TARGET exists and is not a link. Move it away or run: claude-todo install --force" >&2
+        exit 1
+      fi
+      backup="$TARGET.bak.$(date +%Y%m%d%H%M%S)"
+      mv "$TARGET" "$backup"
+      echo "Moved old skill to $backup"
+      ln -s "$SKILL_DIR" "$TARGET"
+    else
+      ln -s "$SKILL_DIR" "$TARGET"
+    fi
+    echo "Linked $TARGET -> $SKILL_DIR"
+    [[ -d "$HOME_DIR/.git" ]] || echo "Next: claude-todo init   (creates $HOME_DIR)"
+    ;;
+  uninstall)
+    if [[ -L "$TARGET" ]]; then rm "$TARGET" && echo "Removed $TARGET"; else echo "$TARGET is not a link, left alone" >&2; fi
+    ;;
+  init)
+    mkdir -p "$HOME_DIR/todos/open" "$HOME_DIR/todos/done"
+    touch "$HOME_DIR/todos/open/.gitkeep" "$HOME_DIR/todos/done/.gitkeep"
+    cd "$HOME_DIR"
+    [[ -d .git ]] || git init -q
+    python3 "$SKILL_DIR/scripts/index.py"
+    git add -A
+    git diff --cached --quiet || git commit -qm "todo: init"
+    echo "Todo repo ready at $HOME_DIR (add a git remote to sync it)"
+    ;;
+  path) echo "$SKILL_DIR" ;;
+  version|--version|-v) echo "$VERSION" ;;
+  help|--help|-h) usage ;;
+  *) usage >&2; exit 1 ;;
+esac
